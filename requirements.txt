@@ -1,0 +1,19 @@
+rich
+accelerate
+pandas
+pyarrow
+omegaconf
+lightning
+torchvision
+timm  # EMA
+tensorboard
+torch-fidelity
+pre-commit
+transformers
+diffusers==0.25.1
+
+# Pruning
+enot-autodl
+fvcore
+enot_prunable_modules
+torch_pruning  # macs and parameters measurement

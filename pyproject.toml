@@ -1,0 +1,89 @@
+[project]
+name = 'plgen'
+version = '0.1.0'
+description = 'Pytorch Lightning + Stable Diffusion'
+classifiers = [
+  'Development Status :: 5 - Production/Stable',
+  'License :: OSI Approved :: MIT License',
+  'Programming Language :: Python',
+  'Programming Language :: Python :: 3.8',
+  'Programming Language :: Python :: 3 :: Only',
+]
+requires-python = '>=3.8'
+dependencies = [
+  'typer[all]',
+]
+
+
+[project.optional-dependencies]
+dev = [
+  'pre-commit',
+  'black',
+  'isort',
+  'pylint',
+  'pytest',
+  'commitizen',
+]
+
+[project.scripts]
+app = 'plgen.start:plgen'
+
+[tool.setuptools.packages.find]
+include = ['plgen*']
+
+[build-system]
+requires = [
+  'setuptools>=64',
+]
+build-backend = 'setuptools.build_meta'
+
+[tool.commitizen]
+name = 'cz_conventional_commits'
+tag_format = '$version'
+version_scheme = 'pep440'
+version_provider = 'pep621'
+update_changelog_on_bump = true
+major_version_zero = true
+
+[tool.black]
+line-length = 120
+target-version = ['py38']
+include = '\.pyi?$|\.ipynbi?$'
+
+[tool.isort]
+profile = 'black'
+line_length = 120
+ensure_newline_before_comments = true
+force_single_line = true
+
+[tool.docformatter]
+recursive = true
+wrap-summaries = 0
+wrap-descriptions = 0
+blank = true
+black = true
+pre-summary-newline = true
+
+[tool.yamlfix]
+line_length = 120
+explicit_start = false
+sequence_style = 'keep_style'
+whitelines = 1
+section_whitelines = 1
+
+[tool.pylint.format]
+max-line-length = 120
+
+[tool.pylint.typecheck]
+generated-members = ['torch.*']
+
+[tool.pylint.messages_control]
+disable = ['missing-module-docstring']
+
+[tool.pylint.BASIC]
+good-names = ['lr', 'bs']
+
+[tool.pyright]
+reportMissingImports = false
+reportMissingTypeStubs = false
+reportWildcardImportFromLibrary = false
