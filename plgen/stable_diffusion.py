@@ -2,7 +2,8 @@ from itertools import chain
 
 import lightning as L
 import torch
-from diffusers.image_processor import VaeImageProcessor
+from clearml import Logger
+from diffusers import StableDiffusionPipeline
 from diffusers.models.autoencoders.autoencoder_kl import AutoencoderKL
 from diffusers.models.unet_2d_condition import UNet2DConditionModel
 from diffusers.optimization import get_scheduler
@@ -25,8 +26,6 @@ class StableDiffusionModule(L.LightningModule):
         self.text_encoder = CLIPTextModel.from_pretrained(name, subfolder="text_encoder")
         self.noise_scheduler = DDPMScheduler.from_pretrained(name, subfolder="scheduler")
 
-        self.processor = VaeImageProcessor(vae_scale_factor=0.18215)  # pyright: ignore
-
         self.save_hyperparameters()
 
         # Do not train anything except unet
@@ -35,7 +34,11 @@ class StableDiffusionModule(L.LightningModule):
 
     def get_tokens(self, caption, tokenizer):
         text_inputs = tokenizer(
-            caption, padding="max_length", max_length=tokenizer.model_max_length, truncation=True, return_tensors="pt"
+            caption,
+            padding="max_length",
+            max_length=tokenizer.model_max_length,
+            truncation=True,
+            return_tensors="pt",
         )
         return text_inputs.input_ids.to(self.device)
 
@@ -52,6 +55,9 @@ class StableDiffusionModule(L.LightningModule):
 
     def training_step(self, batch, batch_idx):  # pylint: disable=W0221 # Variadics removed in overriding
         del batch_idx
+
+        if self.global_step % 100 == 0:
+            self.generate_images()
 
         image, caption = batch
 
@@ -98,3 +104,21 @@ class StableDiffusionModule(L.LightningModule):
             "optimizer": optimizer,
             "lr_scheduler": scheduler,
         }
+
+    def generate_images(self):  # pylint: disable=W0221 # Variadics removed in overriding
+        pipe = StableDiffusionPipeline.from_pretrained(
+            self.cfg.model.model_name,
+            vae=self.vae,
+            text_encoder=self.text_encoder,
+            tokenizer=self.tokenizer,
+            unet=self.unet,
+        )
+
+        image = pipe(self.cfg.image_logging.validation_prompt).images[0]
+
+        Logger.current_logger().report_image(
+            "Title",
+            "Series",
+            iteration=self.global_step,
+            image=image,
+        )
